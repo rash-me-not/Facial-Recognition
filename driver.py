@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from knn_sklearn import KNNSklearn
+from cnn_tensorflow import CNNTensorflow
 
 
 class Main:
@@ -57,6 +58,9 @@ if __name__ == "__main__":
     main = Main(file)
     data = main.generate_dataset()
     knn = KNNSklearn(data)
+    cnn = CNNTensorflow(data)
 
     k_list = [1,2]
     knn.train_and_validate(k_list, "Manhattan")
+
+    cnn.train_and_validate()
