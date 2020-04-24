@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from knn_sklearn import KNNSklearn
-
+from cnn_tensorflow import CNNTensorflow
+from linearclassifier import LinearClassifier
 
 class Main:
     def __init__(self, file):
@@ -57,6 +58,11 @@ if __name__ == "__main__":
     main = Main(file)
     data = main.generate_dataset()
     knn = KNNSklearn(data)
+    cnn = CNNTensorflow(data)
+    lc = LinearClassifier(data)
 
     k_list = [1,2]
     knn.train_and_validate(k_list, "Manhattan")
+
+    cnn.train_and_validate()
+    lc.train_and_validate()
