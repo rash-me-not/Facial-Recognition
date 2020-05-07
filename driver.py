@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from knn_sklearn import KNNSklearn
+from cnn_tensorflow import CNNTensorflow
+from linearclassifier import LinearClassifier
 from knn_manual import KNNManual
 from hog import Hog_descriptor
 import pickle
@@ -49,7 +51,7 @@ class Main:
             plt.yticks([])
             plt.grid(False)
             image = x[i].reshape(48, 48)
-            plt.imshow(image)
+            plt.imshow(image, cmap='gray')
             plt.xlabel(emotion_labels[y[i]])
         plt.show()
 
@@ -112,25 +114,36 @@ class Main:
 
 
 if __name__ == "__main__":
+
     file = "../../fer2013/fer2013.csv"
     main = Main(file)
 
     x_train, x_feat_train, y_train, \
     x_val, x_feat_val, y_val, x_test, x_feat_test, y_test = main.generate_dataset()
+    data = main.generate_dataset()
+    knn = KNNSklearn(data)
+    cnn = CNNTensorflow(data)
+    lc = LinearClassifier(data)
 
     # data = pickle.load(open(data_path, "rb"))
-    knn = KNNManual()
+    knn_man = KNNManual()
 
     k_list = [1, 2, 5]
     num_folds = 3
     # k = knn.train_wd_cross_validation(x_train, y_train, num_folds, k_list, "Manhattan")
-    k = knn.train_wd_cross_validation(x_feat_train, y_train, num_folds, k_list, "Manhattan")
+    k = knn_man.train_wd_cross_validation(x_feat_train, y_train, num_folds, k_list, "Manhattan")
 
     print("Best k: %d" % k)
 
     # Retrain the model with the best k and predict on the test data
     # knn.train(x_train, y_train)
-    knn.train(x_feat_train, y_train)
-    y_pred = knn.predict(x_feat_test, "Manhattan", k)
-    accuracy = knn.get_accuracy(y_pred, y_test)
+    knn_man.train(x_feat_train, y_train)
+    y_pred = knn_man.predict(x_feat_test, "Manhattan", k)
+    accuracy = knn_man.get_accuracy(y_pred, y_test)
     print('Final Result:=> accuracy: %f' % (accuracy))
+
+    # k_list = [1,2]
+    # knn.train_and_validate(k_list, "Manhattan")
+
+    cnn.train_and_validate()
+    lc.train_and_validate()
