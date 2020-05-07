@@ -1,6 +1,8 @@
 from sklearn.neighbors import KNeighborsClassifier
 import pickle
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 class KNNSklearn:
 
@@ -11,15 +13,19 @@ class KNNSklearn:
         self.x_val = self.data["x_val"]
         self.y_val = self.data["y_val"]
         self.x_test = self.data["x_test"]
-        self.y_test = self.data["x_test"]
+        self.y_test = self.data["y_test"]
 
     def get_knn_model(self, k, dist_metric):
-        """When p = 1, this is equivalent to using manhattan_distance , and euclidean_distance for p = 2"""
-        dist_dict = {"Manhattan":1, "Euclidean":2}
+        """When p = 1, use manhattan_distance , else euclidean_distance for p = 2"""
+
+        dist_dict = {"Manhattan": 1, "Euclidean": 2}
         model = KNeighborsClassifier(n_neighbors=k, p=dist_dict[dist_metric])
         return model
 
     def train_and_validate(self, k_list, dist_metric):
+        """ Iterates through different values of k (number of nearest neighbors), fetches a knn classifier based on the
+        distance metric (Manhattan/Euclidean), trains the model and determines the accuracy on the validation data.
+        Returns the model with the highest validation accuracy """
 
         validation_accuracies = []
         for k in k_list:
@@ -39,41 +45,59 @@ class KNNSklearn:
             if acc[1] > max_acc:
                 max_acc = acc[1]
                 acc_model = acc[2]
-
         return acc_model
 
-
-
     def train_wd_cross_validation(self, num_folds, k_choices, dist_metric):
-
-        X_train_folds = []
-        y_train_folds = []
-        # Step 5.2: split up the training data and labels into folds.
-        X_train_folds = np.split(self.x_train, num_folds)
-        y_train_folds = np.split(self.y_train, num_folds)
-
-        # Step 5.3: perform k-fold cross validation to find the best value of k. For each k, run the KNN method multiple times. Store the accuracies for all folds and all k values.
+        """
+        Perform k-fold cross validation to find the best value of k. For each k, run the KNN method multiple times.
+        Here based on the number of folds (n), we train the model using n-1 proportion of dataset, and validate on one
+        portion of data. This process is repeated n times for k different values
+        Store the accuracies for all folds and all k values.
+        Return the model with the maximum accuracy
+        """
+        # split up the training data and labels into folds.
+        X_train_folds = np.array_split(self.x_train, num_folds)
+        y_train_folds = np.array_split(self.y_train, num_folds)
 
         k_to_accuracies = {}  # k_to_accuracies[k]: a list giving the different accuracy values
-        num_split = self.x_train.shape[0] / num_folds
         acc_k = np.zeros((len(k_choices), num_folds), dtype=np.float)
+        max_acc = 0
+
         # call classifiers multiple times to generate the cross-validation
         for ik, k in enumerate(k_choices):
             for i in range(num_folds):
                 train_set = np.concatenate((X_train_folds[:i] + X_train_folds[i + 1:]))
                 label_set = np.concatenate((y_train_folds[:i] + y_train_folds[i + 1:]))
                 model = self.get_knn_model(k, dist_metric)
-                model.train(train_set, label_set)
-                y_pred_fold = model.predict(X_train_folds[i], k=k, num_loops=0)
-                num_correct = np.sum(y_pred_fold == y_train_folds[i])
-                acc_k[ik, i] = float(num_correct) / num_split
-            k_to_accuracies[k] = acc_k[ik]
+                model.fit(train_set, label_set)
+                acc = model.score(X_train_folds[i], y_train_folds[i])
+                acc_k[ik, i] = acc
+                if acc > max_acc:
+                    max_acc = acc
+                    best_model = model
+                k_to_accuracies[k] = acc_k[ik]
 
         # Print out the computed accuracies
         for k in sorted(k_to_accuracies):
             for accuracy in k_to_accuracies[k]:
                 print('k = %d, accuracy = %f' % (k, accuracy))
 
-    def predict(self):
-        pass
+        # Plot the graph representing the mean and std deviation of accuracies for different k values
+        accuracies_mean = np.array([np.mean(v) for k, v in sorted(k_to_accuracies.items())])
+        accuracies_std = np.array([np.std(v) for k, v in sorted(k_to_accuracies.items())])
+        plt.errorbar(k_choices, accuracies_mean, yerr=accuracies_std)
+        plt.title('Cross-validation on k')
+        plt.xlabel('k')
+        plt.ylabel('Cross-validation accuracy')
+        plt.show()
 
+        return best_model
+
+    def predict(self, model):
+        return model.predict(self.x_test)
+
+    def get_accuracy(self, y_pred):
+        num_test = y_pred.shape[0]
+        num_correct = np.sum(y_pred == self.y_test)
+        accuracy = float(num_correct) / num_test
+        return accuracy
