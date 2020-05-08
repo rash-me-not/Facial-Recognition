@@ -22,18 +22,19 @@ class Main:
 
         df = pd.read_csv(file, header=0)
         data_path = os.path.join(os.path.dirname(__file__), 'data')
+        if not os.path.exists(data_path):
+            os.mkdir(data_path)
 
-        train_samples = df[df.Usage == "Training"]
-        val_samples = df[df.Usage == "PrivateTest"]
-        test_samples = df[df.Usage == "PublicTest"]
+        train_samples = df[df.Usage == "Training"][:25]
+        val_samples = df[df.Usage == "PrivateTest"][:3]
+        test_samples = df[df.Usage == "PublicTest"][:2]
 
         samples_dict = {"train": train_samples, "val": val_samples, "test": test_samples}
         data_dict = {}
         for type, samples in samples_dict.items():
-            data_dict["x_" + type],data_dict["x_feat_" + type], data_dict["y_" + type] = self.preprocess(samples)
-            # data_file = "x_" + type + ".p"
-            # pickle.dump(data_dict["x_" + type], open(os.path.join(data_path, data_file), "wb"))
+            data_dict["x_" + type], data_dict["x_feat_" + type], data_dict["y_" + type] = self.preprocess(samples)
 
+        pickle.dump(data_dict, open(os.path.join(data_path, 'data.p'), "wb"))
         self.visualize(data_dict["x_train"], data_dict["y_train"])
         return data_dict["x_train"], data_dict["x_feat_train"], data_dict["y_train"], \
                data_dict["x_val"], data_dict["x_feat_val"], data_dict["y_val"], \
@@ -114,36 +115,34 @@ class Main:
 
 
 if __name__ == "__main__":
-
-    file = "../../fer2013/fer2013.csv"
+    file = "fer2013.csv"
     main = Main(file)
 
     x_train, x_feat_train, y_train, \
     x_val, x_feat_val, y_val, x_test, x_feat_test, y_test = main.generate_dataset()
-    data = main.generate_dataset()
-    knn = KNNSklearn(data)
-    cnn = CNNTensorflow(data)
-    lc = LinearClassifier(data)
+    # data = main.generate_dataset()
+    # knn = KNNSklearn(data)
+    cnn = CNNTensorflow()
+    # lc = LinearClassifier(data)
 
-    # data = pickle.load(open(data_path, "rb"))
-    knn_man = KNNManual()
+    # knn_man = KNNManual()
 
-    k_list = [1, 2, 5]
-    num_folds = 3
+    # k_list = [1, 2, 5]
+    # num_folds = 3
     # k = knn.train_wd_cross_validation(x_train, y_train, num_folds, k_list, "Manhattan")
-    k = knn_man.train_wd_cross_validation(x_feat_train, y_train, num_folds, k_list, "Manhattan")
+    # k = knn_man.train_wd_cross_validation(x_feat_train, y_train, num_folds, k_list, "Manhattan")
 
-    print("Best k: %d" % k)
+    # print("Best k: %d" % k)
 
     # Retrain the model with the best k and predict on the test data
     # knn.train(x_train, y_train)
-    knn_man.train(x_feat_train, y_train)
-    y_pred = knn_man.predict(x_feat_test, "Manhattan", k)
-    accuracy = knn_man.get_accuracy(y_pred, y_test)
-    print('Final Result:=> accuracy: %f' % (accuracy))
+    # knn_man.train(x_feat_train, y_train)
+    # y_pred = knn_man.predict(x_feat_test, "Manhattan", k)
+    # accuracy = knn_man.get_accuracy(y_pred, y_test)
+    # print('Final Result:=> accuracy: %f' % (accuracy))
 
     # k_list = [1,2]
     # knn.train_and_validate(k_list, "Manhattan")
 
     cnn.train_and_validate()
-    lc.train_and_validate()
+    # lc.train_and_validate()

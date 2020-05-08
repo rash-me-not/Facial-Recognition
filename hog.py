@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 class Hog_descriptor():
     def __init__(self, img, cell_size=16, bin_size=8):
-        self.img = img.reshape(48,48).astype(np.uint8)
+        self.img = img.reshape(48, 48).astype(np.uint8)
         self.cell_size = cell_size
         self.bin_size = bin_size
         self.angle_unit = 360 / self.bin_size
@@ -72,18 +72,19 @@ class Hog_descriptor():
     def render_gradient(self, image, cell_gradient):
         cell_width = self.cell_size / 2
         max_mag = np.array(cell_gradient).max()
-        for x in range(cell_gradient.shape[0]):
-            for y in range(cell_gradient.shape[1]):
-                cell_grad = cell_gradient[x][y]
-                cell_grad /= max_mag
-                angle = 0
-                angle_gap = self.angle_unit
-                for magnitude in cell_grad:
-                    angle_radian = math.radians(angle)
-                    x1 = int(x * self.cell_size + magnitude * cell_width * math.cos(angle_radian))
-                    y1 = int(y * self.cell_size + magnitude * cell_width * math.sin(angle_radian))
-                    x2 = int(x * self.cell_size - magnitude * cell_width * math.cos(angle_radian))
-                    y2 = int(y * self.cell_size - magnitude * cell_width * math.sin(angle_radian))
-                    cv2.line(image, (y1, x1), (y2, x2), int(255 * math.sqrt(magnitude)))
-                    angle += angle_gap
+        if max_mag != 0:
+            for x in range(cell_gradient.shape[0]):
+                for y in range(cell_gradient.shape[1]):
+                    cell_grad = cell_gradient[x][y]
+                    cell_grad /= max_mag
+                    angle = 0
+                    angle_gap = self.angle_unit
+                    for magnitude in cell_grad:
+                        angle_radian = math.radians(angle)
+                        x1 = int(x * self.cell_size + magnitude * cell_width * math.cos(angle_radian))
+                        y1 = int(y * self.cell_size + magnitude * cell_width * math.sin(angle_radian))
+                        x2 = int(x * self.cell_size - magnitude * cell_width * math.cos(angle_radian))
+                        y2 = int(y * self.cell_size - magnitude * cell_width * math.sin(angle_radian))
+                        cv2.line(image, (y1, x1), (y2, x2), int(255 * math.sqrt(magnitude)))
+                        angle += angle_gap
         return image
