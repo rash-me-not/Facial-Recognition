@@ -36,8 +36,7 @@ class Main:
             for type, samples in samples_dict.items():
                 data_dict["x_" + type],data_dict["x_feat_" + type], data_dict["y_" + type] = self.preprocess(samples)
                 # data_file = "x_" + type + ".p"
-                pickle.dump(data_dict, open(os.path.join(data_path, "data.p"), "wb"))
-
+            pickle.dump(data_dict, open(os.path.join(data_path, "data.p"), "wb"))
         else:
             data_dict = pickle.load(open(data_path, "rb"))
 
@@ -121,33 +120,33 @@ class Main:
 
 
 if __name__ == "__main__":
-    file = "fer2013.csv"
+    file = "../../fer2013/fer2013.csv"
     main = Main(file)
 
     x_train, x_feat_train, y_train, \
     x_val, x_feat_val, y_val, x_test, x_feat_test, y_test = main.generate_dataset(read_from_pickle = False)
     # knn = KNNSklearn(data)
-    # cnn = CNNTensorflow(data)
+    cnn = CNNTensorflow()
     # lc = LinearClassifier(data)
 
-    knn_man = KNNManual()
+    # knn_man = KNNManual()
 
-    k_list = [1, 2, 5]
-    num_folds = 3
+    # k_list = [1, 2, 5]
+    # num_folds = 3
     # k = knn.train_wd_cross_validation(x_train, y_train, num_folds, k_list, "Manhattan")
-    k = knn_man.train_wd_cross_validation(x_feat_train, y_train, num_folds, k_list, "Manhattan")
+    # k = knn_man.train_wd_cross_validation(x_feat_train, y_train, num_folds, k_list, "Manhattan")
 
-    print("Best k: %d" % k)
+    # print("Best k: %d" % k)
 
     # Retrain the model with the best k and predict on the test data
     # knn.train(x_train, y_train)
-    knn_man.train(x_feat_train, y_train)
-    y_pred = knn_man.predict(x_feat_test, "Manhattan", k)
-    accuracy = knn_man.get_accuracy(y_pred, y_test)
-    print('Final Result:=> accuracy: %f' % (accuracy))
+    # knn_man.train(x_feat_train, y_train)
+    # y_pred = knn_man.predict(x_feat_test, "Manhattan", k)
+    # accuracy = knn_man.get_accuracy(y_pred, y_test)
+    # print('Final Result:=> accuracy: %f' % (accuracy))
 
     # k_list = [1,2]
     # knn.train_and_validate(k_list, "Manhattan")
 
-    # cnn.train_and_validate()
+    cnn.train_and_validate()
     # lc.train_and_validate()
