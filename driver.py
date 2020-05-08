@@ -35,7 +35,6 @@ class Main:
         if not read_from_pickle:
             for type, samples in samples_dict.items():
                 data_dict["x_" + type],data_dict["x_feat_" + type], data_dict["y_" + type] = self.preprocess(samples)
-                # data_file = "x_" + type + ".p"
             pickle.dump(data_dict, open(os.path.join(data_path, "data.p"), "wb"))
         else:
             data_dict = pickle.load(open(data_path, "rb"))
