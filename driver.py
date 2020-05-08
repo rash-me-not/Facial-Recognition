@@ -17,7 +17,7 @@ class Main:
     def __init__(self, file):
         self.file = file
 
-    def generate_dataset(self):
+    def generate_dataset(self, read_from_pickle = False):
         """Read the source file and return a dictionary with x_train, y_train, x_val, y_yal, x_test and y_test"""
 
         df = pd.read_csv(file, header=0)
@@ -29,10 +29,15 @@ class Main:
 
         samples_dict = {"train": train_samples, "val": val_samples, "test": test_samples}
         data_dict = {}
-        for type, samples in samples_dict.items():
-            data_dict["x_" + type],data_dict["x_feat_" + type], data_dict["y_" + type] = self.preprocess(samples)
-            # data_file = "x_" + type + ".p"
-            # pickle.dump(data_dict["x_" + type], open(os.path.join(data_path, data_file), "wb"))
+
+        if not read_from_pickle:
+            for type, samples in samples_dict.items():
+                data_dict["x_" + type],data_dict["x_feat_" + type], data_dict["y_" + type] = self.preprocess(samples)
+                # data_file = "x_" + type + ".p"
+                pickle.dump(data_dict, open(os.path.join(data_path, "data.p"), "wb"))
+
+        else:
+            data_dict = pickle.load(open(data_path, "rb"))
 
         self.visualize(data_dict["x_train"], data_dict["y_train"])
         return data_dict["x_train"], data_dict["x_feat_train"], data_dict["y_train"], \
@@ -119,13 +124,11 @@ if __name__ == "__main__":
     main = Main(file)
 
     x_train, x_feat_train, y_train, \
-    x_val, x_feat_val, y_val, x_test, x_feat_test, y_test = main.generate_dataset()
-    data = main.generate_dataset()
-    knn = KNNSklearn(data)
-    cnn = CNNTensorflow(data)
-    lc = LinearClassifier(data)
+    x_val, x_feat_val, y_val, x_test, x_feat_test, y_test = main.generate_dataset(read_from_pickle = False)
+    # knn = KNNSklearn(data)
+    # cnn = CNNTensorflow(data)
+    # lc = LinearClassifier(data)
 
-    # data = pickle.load(open(data_path, "rb"))
     knn_man = KNNManual()
 
     k_list = [1, 2, 5]
@@ -145,5 +148,5 @@ if __name__ == "__main__":
     # k_list = [1,2]
     # knn.train_and_validate(k_list, "Manhattan")
 
-    cnn.train_and_validate()
-    lc.train_and_validate()
+    # cnn.train_and_validate()
+    # lc.train_and_validate()
