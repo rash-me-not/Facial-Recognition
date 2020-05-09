@@ -126,7 +126,7 @@ if __name__ == "__main__":
     x_val, x_feat_val, y_val, x_test, x_feat_test, y_test = main.generate_dataset(read_from_pickle = False)
     # knn = KNNSklearn(data)
     cnn = CNNTensorflow()
-    # lc = LinearClassifier(data)
+    # lc = LinearClassifier()
 
     # knn_man = KNNManual()
 
@@ -148,4 +148,5 @@ if __name__ == "__main__":
     # knn.train_and_validate(k_list, "Manhattan")
 
     cnn.train_and_validate()
-    # lc.train_and_validate()
+    # lc_train_acc, lc_validation_acc = lc.train_and_validate(x_train, y_train, x_val, y_val)
+    # lc_test_acc = lc.predict_accuracy(x_test, y_test)
