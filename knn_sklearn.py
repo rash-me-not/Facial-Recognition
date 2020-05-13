@@ -6,14 +6,8 @@ import matplotlib.pyplot as plt
 
 class KNNSklearn:
 
-    def __init__(self, data):
-        self.data = data
-        self.x_train = self.data["x_train"]
-        self.y_train = self.data["y_train"]
-        self.x_val = self.data["x_val"]
-        self.y_val = self.data["y_val"]
-        self.x_test = self.data["x_test"]
-        self.y_test = self.data["y_test"]
+    def __init__(self):
+        pass
 
     def get_knn_model(self, k, dist_metric):
         """When p = 1, use manhattan_distance , else euclidean_distance for p = 2"""
@@ -22,7 +16,7 @@ class KNNSklearn:
         model = KNeighborsClassifier(n_neighbors=k, p=dist_dict[dist_metric])
         return model
 
-    def train_and_validate(self, k_list, dist_metric):
+    def train_and_validate(self, x_train, y_train, x_val, y_val, k_list, dist_metric):
         """ Iterates through different values of k (number of nearest neighbors), fetches a knn classifier based on the
         distance metric (Manhattan/Euclidean), trains the model and determines the accuracy on the validation data.
         Returns the model with the highest validation accuracy """
@@ -30,11 +24,11 @@ class KNNSklearn:
         validation_accuracies = []
         for k in k_list:
             model = self.get_knn_model(k, dist_metric)
-            model.fit(self.x_train, self.y_train)
+            model.fit(x_train, y_train)
             filename = 'finalized_model_' + str(k) + '_neighbor.sav'
             pickle.dump(model, open(filename, 'wb'))
             # model = pickle.load(open(filename, 'rb'))
-            acc = model.score(self.x_val, self.y_val)
+            acc = model.score(x_val, y_val)
             # keep track of what works on the validation set
             validation_accuracies.append((k, acc, model))
         print(validation_accuracies)
@@ -47,7 +41,7 @@ class KNNSklearn:
                 acc_model = acc[2]
         return acc_model
 
-    def train_wd_cross_validation(self, num_folds, k_choices, dist_metric):
+    def train_wd_cross_validation(self, x_train, y_train, num_folds, k_choices, dist_metric):
         """
         Perform k-fold cross validation to find the best value of k. For each k, run the KNN method multiple times.
         Here based on the number of folds (n), we train the model using n-1 proportion of dataset, and validate on one
@@ -56,8 +50,8 @@ class KNNSklearn:
         Return the model with the maximum accuracy
         """
         # split up the training data and labels into folds.
-        X_train_folds = np.array_split(self.x_train, num_folds)
-        y_train_folds = np.array_split(self.y_train, num_folds)
+        X_train_folds = np.array_split(x_train, num_folds)
+        y_train_folds = np.array_split(y_train, num_folds)
 
         k_to_accuracies = {}  # k_to_accuracies[k]: a list giving the different accuracy values
         acc_k = np.zeros((len(k_choices), num_folds), dtype=np.float)
@@ -93,11 +87,11 @@ class KNNSklearn:
 
         return best_model
 
-    def predict(self, model):
-        return model.predict(self.x_test)
+    def predict(self, model, x_test):
+        return model.predict(x_test)
 
-    def get_accuracy(self, y_pred):
+    def get_accuracy(self, y_test, y_pred):
         num_test = y_pred.shape[0]
-        num_correct = np.sum(y_pred == self.y_test)
+        num_correct = np.sum(y_pred == y_test)
         accuracy = float(num_correct) / num_test
         return accuracy

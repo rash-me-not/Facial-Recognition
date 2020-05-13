@@ -102,7 +102,7 @@ class LinearClassifier(object):
         num_train = X_batch.shape[0]
 
         # get prediction values with current W to calculate loss
-        scores = X_batch.dot(W) + b
+        scores = X_batch.dot(W)
         margins = []
         for i in range(num_train):
             margins.append(np.maximum(0, scores[i] - scores[i][y_batch[i]]+1))
