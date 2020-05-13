@@ -30,9 +30,9 @@ class Main:
             if not os.path.exists(data_path):
                 os.mkdir(data_path)
 
-            train_samples = df[df.Usage == "Training"][:3000]
-            val_samples = df[df.Usage == "PrivateTest"][:500]
-            test_samples = df[df.Usage == "PublicTest"][:100]
+            train_samples = df[df.Usage == "Training"]
+            val_samples = df[df.Usage == "PrivateTest"]
+            test_samples = df[df.Usage == "PublicTest"]
 
             samples_dict = {"train": train_samples, "val": val_samples, "test": test_samples}
             for type, samples in samples_dict.items():
@@ -181,16 +181,16 @@ if __name__ == "__main__":
     # lc = LinearClassifier(data)
     #
     # knn_man = KNNManual()
-    # #
+
     # k_list = [1, 2, 5]
     # num_folds = 3
-    # # k = knn.train_wd_cross_validation(x_train, y_train, num_folds, k_list, "Manhattan")
+    # k = knn.train_wd_cross_validation(x_train, y_train, num_folds, k_list, "Manhattan")
     # k = knn_man.train_wd_cross_validation(x_feat_train, y_train, num_folds, k_list, "Manhattan")
-    #
+
     # print("Best k: %d" % k)
-    #
-    # # Retrain the model with the best k and predict on the test data
-    # # knn.train(x_train, y_train)
+
+    # Retrain the model with the best k and predict on the test data
+    # knn.train(x_train, y_train)
     # knn_man.train(x_feat_train, y_train)
     # y_pred = knn_man.predict(x_feat_test, "Manhattan", k)
     # accuracy = knn_man.get_accuracy(y_pred, y_test)
