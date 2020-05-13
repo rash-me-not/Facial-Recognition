@@ -10,9 +10,6 @@ class Hog_descriptor():
         self.cell_size = cell_size
         self.bin_size = bin_size
         self.angle_unit = 360 / self.bin_size
-        # assert type(self.bin_size) == int, "bin_size should be integer,"
-        # assert type(self.cell_size) == int, "cell_size should be integer,"
-        # assert type(self.angle_unit) == int, "bin_size should be divisible by 360"
 
     def extract(self):
         height, width = self.img.shape
