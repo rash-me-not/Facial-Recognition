@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from knn_sklearn import KNNSklearn
 from sklearn.metrics import confusion_matrix
 from cnn_tensorflow import CNNTensorflow
+from data_augmentation import DataAugmentation
 from linearclassifier import LinearClassifier
 from knn_manual import KNNManual
 from hog import Hog_descriptor
@@ -153,20 +154,24 @@ class Main:
 if __name__ == "__main__":
     file = "../../fer2013/fer2013.csv"
     main = Main(file)
-
+    da = DataAugmentation()
     x_train, x_feat_train, y_train, \
     x_val, x_feat_val, y_val, x_test, x_feat_test, y_test = main.generate_dataset(read_from_pickle = True)
+
+    """Augmenting dataset for training"""
+    x_train, y_train = da.augment_dataset(x_train, y_train)
     cnn = CNNTensorflow()
 
     """Training and Validation"""
     model = cnn.train_and_validate(x_train, x_feat_train, y_train,
-                                   x_val, x_feat_val, y_val, scale=False)
+                                   x_val, x_feat_val, y_val, with_hog = False, scale=True)
 
-    x_test_reshaped = cnn.reshape_features(x_test, scale=False)
+    x_test_reshaped = cnn.reshape_features(x_test, scale=True)
     y_test_categ = cnn.to_categ(y_test, num_classes=7)
 
     """Prediction"""
     y_pred_categ = cnn.predict(model, x_test_reshaped, x_feat_test)
+    pickle.dump(y_pred_categ, open("pred.p", "wb"))
 
     """Classification metrics"""
     emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']

@@ -1,19 +1,16 @@
 import datetime
 
-import tensorflow as tf
-from keras import models, layers, optimizers
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
-from keras.layers import BatchNormalization, Dropout, Conv2D, MaxPooling2D, Dense, concatenate
-from keras.optimizers import SGD
-from keras.regularizers import l2
-from keras.utils import to_categorical
-from tensorflow import keras
+from tensorflow.keras import models, layers, optimizers
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.layers import BatchNormalization, Dropout, Conv2D, MaxPooling2D, Dense, concatenate
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.regularizers import l2
+from tensorflow.keras.utils import to_categorical
 import numpy as np
-from keras.layers import Flatten, Input
-from keras.models import Model
+from tensorflow.keras.layers import Flatten, Input
+from tensorflow.keras.models import Model
 from sklearn import metrics
 import matplotlib.pyplot as plt
-from sklearn.utils import class_weight
 import cv2
 
 
@@ -100,7 +97,7 @@ class CNNTensorflow(object):
     def to_categ(self, y, num_classes):
         return to_categorical(y, num_classes=num_classes)
 
-    def train_and_validate(self, x_train, x_feat_train, y_train, x_val, x_feat_val, y_val, batch_size=32, dist_metric="accuracy", scale=False):
+    def train_and_validate(self, x_train, x_feat_train, y_train, x_val, x_feat_val, y_val, batch_size=32, with_hog=False, dist_metric="accuracy", scale=False):
         start = datetime.datetime.now()
         x_train_reshaped = self.reshape_features(x_train, scale)
         x_val_reshaped = self.reshape_features(x_val, scale)
@@ -108,8 +105,10 @@ class CNNTensorflow(object):
         y_train_categ = self.to_categ(y_train, num_classes=7)
         y_val_categ = self.to_categ(y_val, num_classes=7)
 
-        model = self.get_combined_model(x_train_reshaped, x_feat_train, droprate=0.8)
-        # model = self.get_cnn_model(x_train_reshaped, droprate=0.8)
+        if(with_hog):
+            model = self.get_combined_model(x_train_reshaped, x_feat_train, droprate=0.5)
+        else:
+            model = self.get_cnn_model(x_train_reshaped, droprate=0.5)
         print(model.summary())
         adam = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
         model.compile(loss='categorical_crossentropy',
@@ -121,11 +120,10 @@ class CNNTensorflow(object):
                                            mode='auto', min_delta=0.0001, cooldown=0, min_lr=0.000001)
 
         history = model.fit([x_train_reshaped,x_feat_train], y_train_categ,
-                            epochs=50,
+                            epochs=15,
                             batch_size=batch_size,
                             validation_data=([x_val_reshaped,x_feat_val], y_val_categ),
-                            shuffle=True,
-                            callbacks=[early_stopping, reduce_lr_plat])
+                            shuffle=True)
 
         (eval_loss, eval_accuracy) = model.evaluate(
             [x_val_reshaped,x_feat_val], y_val_categ, batch_size=batch_size, verbose=0)
@@ -139,8 +137,8 @@ class CNNTensorflow(object):
         return model
 
     def plot_acc_loss(self, history):
-        acc = history.history['acc']
-        val_acc = history.history['val_acc']
+        acc = history.history['accuracy']
+        val_acc = history.history['val_accuracy']
         loss = history.history['loss']
         val_loss = history.history['val_loss']
         epochs = range(len(acc))
