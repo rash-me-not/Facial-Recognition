@@ -199,6 +199,13 @@ if __name__ == "__main__":
         elif (user_input == '2'):
             print("Linear Model selected")
             lc = LinearClassifier()
+            lc_train_acc, lc_validation_acc = lc.train_and_validate(x_train, y_train, x_val, y_val)
+            lc_y_pred = lc.predict(x_test)
+            lc_accuracy = lc.get_accuracy(lc_y_pred, y_test)
+
+            emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+            lc_confusion_matrix = confusion_matrix(y_test, lc_y_pred)
+            main.plot_confusion_matrix(lc_confusion_matrix, emotion_labels, cmap="YlGnBu")
 
         elif (user_input == '3'):
             print('KNN selected')

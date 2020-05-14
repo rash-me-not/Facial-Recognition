@@ -68,8 +68,7 @@ class LinearClassifier(object):
 
     def train_and_validate(self, x_train, y_train, x_val, y_val, loss_function="svm"):
         """
-        Train a linear classifier on training set and validate on validation set.
-        Returns accuracy on training and validation sets for comparison. 
+        Train a linear classifier on training and validation sets. 
         """
         loss_history = self.train(x_train, y_train, loss_function=loss_function, verbose=True)
 
@@ -83,11 +82,8 @@ class LinearClassifier(object):
 
         return train_acc_model, val_acc_model
 
-    def predict_accuracy(self, X, y):
-        """
-        Predict labels of input X and compare it correct labels to obtain accuracy.
-        """
-        y_pred = self.predict(X)
+    def get_accuracy(self, y_pred, y):
+        """Calculate accuracy of predictions over ground truth."""
         num_corr_pred = np.sum(y_pred == y)
         acc_model = num_corr_pred / len(y)
 
