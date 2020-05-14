@@ -120,10 +120,11 @@ class CNNTensorflow(object):
                                            mode='auto', min_delta=0.0001, cooldown=0, min_lr=0.000001)
 
         history = model.fit([x_train_reshaped,x_feat_train], y_train_categ,
-                            epochs=15,
+                            epochs=50,
                             batch_size=batch_size,
                             validation_data=([x_val_reshaped,x_feat_val], y_val_categ),
-                            shuffle=True)
+                            shuffle=True,
+                            callbacks=[early_stopping, reduce_lr_plat])
 
         (eval_loss, eval_accuracy) = model.evaluate(
             [x_val_reshaped,x_feat_val], y_val_categ, batch_size=batch_size, verbose=0)
