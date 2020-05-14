@@ -20,7 +20,7 @@ class Main:
     def __init__(self, file):
         self.file = file
 
-    def generate_dataset(self, read_from_pickle = False):
+    def generate_dataset(self, read_from_pickle = False, augment_data = False):
         """Read the source file and return a dictionary with x_train, y_train, x_val, y_yal, x_test and y_test"""
 
         data_dict = {}
@@ -31,13 +31,14 @@ class Main:
             if not os.path.exists(data_path):
                 os.mkdir(data_path)
 
-            train_samples = df[df.Usage == "Training"]
-            val_samples = df[df.Usage == "PrivateTest"]
-            test_samples = df[df.Usage == "PublicTest"]
+            train_samples = df[df.Usage == "Training"][:300]
+            val_samples = df[df.Usage == "PrivateTest"][:50]
+            test_samples = df[df.Usage == "PublicTest"][:25]
 
             samples_dict = {"train": train_samples, "val": val_samples, "test": test_samples}
             for type, samples in samples_dict.items():
-                data_dict["x_" + type],data_dict["x_feat_" + type], data_dict["y_" + type] = self.preprocess(samples)
+                data_dict["x_" + type],data_dict["x_feat_" + type], data_dict["y_" + type] = \
+                    self.preprocess(samples, augment_data=augment_data)
             pickle.dump(data_dict, open(os.path.join(data_path, "data.p"), "wb"))
         else:
             data_dict = pickle.load(open(os.path.join(data_path, "data.p"), "rb"))
@@ -63,16 +64,25 @@ class Main:
             plt.xlabel(emotion_labels[y[i]])
         plt.show()
 
-    def preprocess(self, samples):
+    def preprocess(self, samples, augment_data = False):
         """format the features and labels as necessary for processing"""
 
         y = []
         x = []
         x_feat = []
+
         for idx, image in samples.iterrows():
             y.append(int(image.emotion))
             image_pixel = np.asarray([float(pix) for pix in image.pixels.split(" ")])
-            x.append(image_pixel)  # normalizing
+            x.append(image_pixel)
+
+        """Augmenting dataset for training"""
+        if (augment_data):
+            da = DataAugmentation()
+            x, y = da.augment_dataset(x, y)
+
+        """Extracting HOG Features"""
+        for image_pixel in x:
             hog = Hog_descriptor(image_pixel, cell_size=2, bin_size=8)
             vector, image = hog.extract()
             x_feat.append(vector)
@@ -154,24 +164,21 @@ class Main:
 if __name__ == "__main__":
     file = "../../fer2013/fer2013.csv"
     main = Main(file)
-    da = DataAugmentation()
     x_train, x_feat_train, y_train, \
-    x_val, x_feat_val, y_val, x_test, x_feat_test, y_test = main.generate_dataset(read_from_pickle = True)
+    x_val, x_feat_val, y_val, x_test, x_feat_test, y_test = main.generate_dataset(read_from_pickle=False,
+                                                                                  augment_data=True)
 
-    """Augmenting dataset for training"""
-    x_train, y_train = da.augment_dataset(x_train, y_train)
-    cnn = CNNTensorflow()
 
     """Training and Validation"""
+    cnn = CNNTensorflow()
     model = cnn.train_and_validate(x_train, x_feat_train, y_train,
-                                   x_val, x_feat_val, y_val, with_hog = False, scale=True)
+                                   x_val, x_feat_val, y_val, with_hog = False, scale=False)
 
-    x_test_reshaped = cnn.reshape_features(x_test, scale=True)
+    x_test_reshaped = cnn.reshape_features(x_test, scale=False)
     y_test_categ = cnn.to_categ(y_test, num_classes=7)
 
     """Prediction"""
     y_pred_categ = cnn.predict(model, x_test_reshaped, x_feat_test)
-    pickle.dump(y_pred_categ, open("pred.p", "wb"))
 
     """Classification metrics"""
     emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
