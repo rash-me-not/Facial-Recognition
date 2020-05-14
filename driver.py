@@ -25,11 +25,11 @@ class Main:
 
         data_dict = {}
         data_path = os.path.join(os.path.dirname(__file__), 'data')
+        if not os.path.exists(data_path):
+            os.mkdir(data_path)
 
         if not read_from_pickle:
             df = pd.read_csv(file, header=0)
-            if not os.path.exists(data_path):
-                os.mkdir(data_path)
 
             train_samples = df[df.Usage == "Training"][:300]
             val_samples = df[df.Usage == "PrivateTest"][:50]
@@ -168,46 +168,56 @@ if __name__ == "__main__":
     x_val, x_feat_val, y_val, x_test, x_feat_test, y_test = main.generate_dataset(read_from_pickle=False,
                                                                                   augment_data=True)
 
+    while True:
+        print("Select the option below:")
+        print(
+            '''(1) Convolutional Neural Network\n (2) Linear Model\n (3) KNN\n (4) To exit''')
+        user_input = input('Enter your choice:')
 
-    """Training and Validation"""
-    cnn = CNNTensorflow()
-    model = cnn.train_and_validate(x_train, x_feat_train, y_train,
-                                   x_val, x_feat_val, y_val, with_hog = False, scale=False)
+        if (user_input == '1'):
+            print("Convolutional Neural Network Model selected\n")
+            """Training and Validation"""
+            cnn = CNNTensorflow()
+            model = cnn.train_and_validate(x_train, x_feat_train, y_train,
+                                           x_val, x_feat_val, y_val, with_hog=False, scale=False)
 
-    x_test_reshaped = cnn.reshape_features(x_test, scale=False)
-    y_test_categ = cnn.to_categ(y_test, num_classes=7)
+            x_test_reshaped = cnn.reshape_features(x_test, scale=False)
+            y_test_categ = cnn.to_categ(y_test, num_classes=7)
 
-    """Prediction"""
-    y_pred_categ = cnn.predict(model, x_test_reshaped, x_feat_test)
+            """Prediction"""
+            y_pred_categ = cnn.predict(model, x_test_reshaped, x_feat_test)
 
-    """Classification metrics"""
-    emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
-    classification_metrics = cnn.get_classification_metrics(y_pred_categ.argmax(axis=1), y_test_categ.argmax(axis=1), emotion_labels)
-    print(classification_metrics)
+            """Classification metrics"""
+            emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+            classification_metrics = cnn.get_classification_metrics(y_pred_categ.argmax(axis=1),
+                                                                    y_test_categ.argmax(axis=1), emotion_labels)
+            print(classification_metrics)
 
-    confusion_matrix = confusion_matrix(y_test_categ.argmax(axis=1), y_pred_categ.argmax(axis=1))
-    main.plot_confusion_matrix(confusion_matrix, emotion_labels)
+            confusion_matrix = confusion_matrix(y_test_categ.argmax(axis=1), y_pred_categ.argmax(axis=1))
+            main.plot_confusion_matrix(confusion_matrix, emotion_labels)
 
+        elif (user_input == '2'):
+            print("Linear Model selected")
+            lc = LinearClassifier()
 
-    # knn = KNNSklearn(data)
-    # lc = LinearClassifier(data)
-    #
-    # knn_man = KNNManual()
+        elif (user_input == '3'):
+            print('KNN selected')
+            knn_man = KNNManual()
 
-    # k_list = [1, 2, 5]
-    # num_folds = 3
-    # k = knn.train_wd_cross_validation(x_train, y_train, num_folds, k_list, "Manhattan")
-    # k = knn_man.train_wd_cross_validation(x_feat_train, y_train, num_folds, k_list, "Manhattan")
+            k_list = [1, 2, 5]
+            num_folds = 3
+            k = knn_man.train_wd_cross_validation(x_feat_train, y_train, num_folds, k_list, "Manhattan")
 
-    # print("Best k: %d" % k)
+            print("Best k: %d" % k)
 
-    # Retrain the model with the best k and predict on the test data
-    # knn.train(x_train, y_train)
-    # knn_man.train(x_feat_train, y_train)
-    # y_pred = knn_man.predict(x_feat_test, "Manhattan", k)
-    # accuracy = knn_man.get_accuracy(y_pred, y_test)
-    # print('Final Result:=> accuracy: %f' % (accuracy))
-    #
-    # # k_list = [1,2]
-    # # knn.train_and_validate(k_list, "Manhattan")
-    # # lc.train_and_validate()
+            # Retrain the model with the best k and predict on the test data
+            knn_man.train(x_feat_train, y_train)
+            y_pred = knn_man.predict(x_feat_test, "Manhattan", k)
+            accuracy = knn_man.get_accuracy(y_pred, y_test)
+            print('Final Result:=> accuracy: %f' % (accuracy))
+        else:
+            if (user_input == '4'):
+                print("Thanks for using the program good byee!!")
+            else:
+                print("Not a valid input, program is exiting bye!!")
+            break
